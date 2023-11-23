@@ -1,46 +1,71 @@
-def gitBranch = env.BRANCH_NAME
-def gitURL = "git@github.com:Memphisdev/memphis.py.git"
-def repoUrlPrefix = "memphisos"
+def versionTag
+pipeline {
+  environment {
+    gitBranch = "${env.BRANCH_NAME}"
+    gitURL = "git@github.com:Memphisdev/memphis-functions.py.git"
+    repoUrlPrefix = "memphisos"
+  }
 
-node ("small-ec2-fleet") {
-  git credentialsId: 'main-github', url: gitURL, branch: gitBranch
-	
-  if (env.BRANCH_NAME ==~ /(master)/) { 
-    versionTag = readFile "./version-beta.conf"
+  agent {
+    label 'small-ec2-fleet'
   }
-  else {
-    versionTag = readFile "./version.conf"
-  }
-	
-  try{
-    
-    stage('Install twine') {
-      sh """
-        pip3 install twine
-        python3 -m pip install urllib3==1.26.6
-      """
-    }
-    
-    stage('Deploy to pypi') {
-			if (env.BRANCH_NAME ==~ /(master)/) {
-				sh """
-				  sed -i -r "s/memphis-py/memphis-py-beta/g" setup.py
-			  """
-			}
-		  sh """
-			  sed -i -r "s/version=\\"[0-9].[0-9].[0-9]/version=\\"$versionTag/g" setup.py
-        sed -i -r "s/[0-9].[0-9].[0-9].tar.gz/$versionTag\\.tar.gz/g" setup.py
-				python3 setup.py sdist
-			"""
-			withCredentials([usernamePassword(credentialsId: 'python_sdk', usernameVariable: 'USR', passwordVariable: 'PSW')]) {
-        sh '/home/ec2-user/.local/bin/twine upload -u $USR -p $PSW dist/*'
+
+  stages {
+    stage ('Connect GIT repository') {
+      steps {
+        git credentialsId: 'main-github', url: "git@github.com:Memphisdev/memphis-functions.py.git", branch: "${env.gitBranch}" 
       }
-		}
-	  
-		if (env.BRANCH_NAME ==~ /(latest)/) {
-      stage('Checkout to version branch'){
+    }
+
+    stage('Define version - BETA') {
+      when {branch 'master'}
+      steps {
+        script {
+          versionTag = readFile('./version-beta.conf')
+          sh """
+            sed -i -r "s/\\"memphis-functions/\\"memphis-functions-beta/g" setup.py
+          """
+        }
+      }
+    }
+    stage('Define version - LATEST') {
+      when {branch 'latest'}
+      steps {
+        script {
+          versionTag = readFile('./version.conf')
+        }
+      }
+    }
+
+    stage('Install twine') {
+      steps {
         sh """
-	  sudo dnf config-manager --add-repo https://cli.github.com/packages/rpm/gh-cli.repo -y
+          pip3 install twine
+          python3 -m pip install urllib3==1.26.6
+        """
+      }
+    }
+
+    stage('Deploy to PyPi') {
+      steps {
+        sh """
+			    sed -i -r "s/version=\\"[0-9].[0-9].[0-9]/version=\\"$versionTag/g" setup.py
+          sed -i -r "s/[0-9].[0-9].[0-9].tar.gz/$versionTag\\.tar.gz/g" setup.py
+			  	python3 setup.py sdist
+			  """
+			  withCredentials([usernamePassword(credentialsId: 'python_sdk', usernameVariable: 'USR', passwordVariable: 'PSW')]) {
+          sh """
+            /home/ec2-user/.local/bin/twine upload -u $USR -p $PSW dist/*
+          """
+        }
+      }
+    }
+
+    stage('Checkout to version branch') {
+      when {branch 'latest'}
+      steps {
+        sh """
+	        sudo dnf config-manager --add-repo https://cli.github.com/packages/rpm/gh-cli.repo -y
           sudo dnf install gh -y
         """
         withCredentials([sshUserPrivateKey(keyFileVariable:'check',credentialsId: 'main-github')]) {
@@ -55,18 +80,23 @@ node ("small-ec2-fleet") {
 					"""
         }
       }
-		}
-
-
-    notifySuccessful()
-
-  } catch (e) {
-      currentBuild.result = "FAILED"
+    }
+  }
+  post {
+    always {
       cleanWs()
+    }
+    success {
+      notifySuccessful()
+    }
+    failure {
       notifyFailed()
-      throw e
+    }
   }
 }
+  
+
+
 
 def notifySuccessful() {
   emailext (
