@@ -1,9 +1,11 @@
 import json
 import base64
+import asyncio
 
 def create_function(
     event,
-    event_handler: callable
+    event_handler: callable,
+    use_async = False
 ) -> None:
     """
     This function creates a Memphis function and processes events with the passed-in event_handler function.
@@ -71,14 +73,17 @@ def create_function(
                 return str(base64.b64encode(o), encoding='utf-8')
             return json.JSONEncoder.default(self, o)
 
-    def handler(event):
+    async def handler(event):
         processed_events = {}
         processed_events["messages"] = []
         processed_events["failed_messages"] = []
         for message in event["messages"]:
             try:
                 payload = base64.b64decode(bytes(message['payload'], encoding='utf-8'))
-                processed_message, processed_headers = event_handler(payload, message['headers'], event["inputs"])
+                if use_async:
+                    processed_message, processed_headers = await event_handler(payload, message['headers'], event["inputs"])
+                else:
+                    processed_message, processed_headers = event_handler(payload, message['headers'], event["inputs"])
 
                 if isinstance(processed_message, bytes) and isinstance(processed_headers, dict):
                     processed_events["messages"].append({
@@ -105,4 +110,4 @@ def create_function(
         except Exception as e:
             return f"Returned message types from user function are not able to be converted into JSON: {e}"
 
-    return handler(event)
+    return asyncio.run(handler(event))
