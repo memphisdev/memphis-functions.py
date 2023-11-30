@@ -5,7 +5,7 @@ import asyncio
 def create_function(
     event,
     event_handler: callable,
-    use_async = False
+    use_async: bool = False
 ) -> None:
     """
     This function creates a Memphis function and processes events with the passed-in event_handler function.
@@ -28,7 +28,8 @@ def create_function(
             }
         event_handler (callable):
             `create_function` assumes the function signature is in the format: <event_handler>(payload, headers, inputs) -> processed_payload, processed_headers. 
-            This function will modify the payload and headers and return them in the modified format.
+            This function will modify the payload and headers and return them in the modified format. This function may also be async. 
+            If using asyncio set the create_function parameter use_async to True.
 
             Args:
                 payload (bytes): The payload of the message. It will be encoded as bytes, and the user can assume UTF-8 encoding.
@@ -43,6 +44,8 @@ def create_function(
                 Error:
                     Raises an exception of any kind when something goes wrong with processing a message. 
                     The unprocessed message and the exception will be sent to the dead-letter station.
+        use_async (bool):
+            When using an async function through asyncio, set this flag to True. This will await the event_handler call instead of calling it directly.
 
     Returns:
         handler (callable):
