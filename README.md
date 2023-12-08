@@ -76,6 +76,25 @@ def event_handler(msg_payload, msg_headers, inputs):
     return bytes(json.dumps(as_json), encoding='utf-8'), msg_headers
 ```
 
+Memphis Functions support using Async functions through asyncio. When functions are async, set the use_async parameter to true.
+```python
+import json
+import base64
+import asyncio
+from memphis import create_function
+
+def handler(event, context): # The name of this file and this function should match the handler field in the memphis.yaml file in the following format <file name>.<function name>
+    return create_function(event, event_handler = event_handler, use_async = True)
+
+async def event_handler(msg_payload, msg_headers, inputs):
+    payload =  str(msg_payload, 'utf-8')
+    as_json = json.loads(payload)
+    as_json['modified'] = True
+    asyncio.sleep(1)
+
+    return bytes(json.dumps(as_json), encoding='utf-8'), msg_headers
+```
+
 If the user would want to have a message that they would want to validate and send to the dead letter station if the validation fails then the user can raise an exception. In the following example, the field `check` is simply a boolean. The following function will send any messages which fail the `check` to the dead letter station.
 
 ```python
