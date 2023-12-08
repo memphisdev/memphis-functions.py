@@ -5,7 +5,8 @@ import asyncio
 def create_function(
     event,
     event_handler: callable,
-    use_async: bool = False
+    use_async: bool = False,
+    as_json: bool = False
 ) -> None:
     """
     This function creates a Memphis function and processes events with the passed-in event_handler function.
@@ -83,6 +84,10 @@ def create_function(
         for message in event["messages"]:
             try:
                 payload = base64.b64decode(bytes(message['payload'], encoding='utf-8'))
+                if as_json:
+                    payload =  str(payload, 'utf-8')
+                    payload = json.loads(payload)
+
                 if use_async:
                     processed_message, processed_headers = await event_handler(payload, message['headers'], event["inputs"])
                 else:
