@@ -93,6 +93,9 @@ def create_function(
                 else:
                     processed_message, processed_headers = event_handler(payload, message['headers'], event["inputs"])
 
+                if as_json:
+                    processed_message = bytes(json.dumps(processed_message), encoding='utf-8')
+
                 if isinstance(processed_message, bytes) and isinstance(processed_headers, dict):
                     processed_events["messages"].append({
                         "headers": processed_headers,
