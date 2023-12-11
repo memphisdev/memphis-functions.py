@@ -6,7 +6,7 @@ def create_function(
     event,
     event_handler: callable,
     use_async: bool = False,
-    as_json: bool = False
+    as_dict: bool = False
 ) -> None:
     """
     This function creates a Memphis function and processes events with the passed-in event_handler function.
@@ -84,7 +84,7 @@ def create_function(
         for message in event["messages"]:
             try:
                 payload = base64.b64decode(bytes(message['payload'], encoding='utf-8'))
-                if as_json:
+                if as_dict:
                     payload =  str(payload, 'utf-8')
                     payload = json.loads(payload)
 
@@ -93,7 +93,7 @@ def create_function(
                 else:
                     processed_message, processed_headers = event_handler(payload, message['headers'], event["inputs"])
 
-                if as_json:
+                if as_dict:
                     processed_message = bytes(json.dumps(processed_message), encoding='utf-8')
 
                 if isinstance(processed_message, bytes) and isinstance(processed_headers, dict):
