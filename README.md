@@ -1,4 +1,4 @@
-<a href="![Github (4)](https://github.com/memphisdev/memphis-terraform/assets/107035359/a5fe5d0f-22e1-4445-957d-5ce4464e61b1)">![Github (4)](https://github.com/memphisdev/memphis-terraform/assets/107035359/a5fe5d0f-22e1-4445-957d-5ce4464e61b1)</a>
+[![Github (6)](https://github.com/memphisdev/memphis/assets/107035359/bc2feafc-946c-4569-ab8d-836bc0181890)](https://www.functions.memphis.dev/)
 <p align="center">
 <a href="https://memphis.dev/discord"><img src="https://img.shields.io/discord/963333392844328961?color=6557ff&label=discord" alt="Discord"></a>
 <a href="https://github.com/memphisdev/memphis/issues?q=is%3Aissue+is%3Aclosed"><img src="https://img.shields.io/github/issues-closed/memphisdev/memphis?color=6557ff"></a> 
@@ -10,19 +10,30 @@
 
 <div align="center">
   
-  <img width="200" alt="CNCF Silver Member" src="https://github.com/cncf/artwork/raw/master/other/cncf-member/silver/color/cncf-member-silver-color.svg#gh-light-mode-only">
-  <img width="200" alt="CNCF Silver Member" src="https://github.com/cncf/artwork/raw/master/other/cncf-member/silver/white/cncf-member-silver-white.svg#gh-dark-mode-only">
+<img width="177" alt="cloud_native 2 (5)" src="https://github.com/memphisdev/memphis/assets/107035359/a20ea11c-d509-42bb-a46c-e388c8424101">
+  
+</div>
  
+ <b><p align="center">
+  <a href="https://memphis.dev/pricing/">Cloud</a> - <a href="https://memphis.dev/docs/">Docs</a> - <a href="https://twitter.com/Memphis_Dev">X</a> - <a href="https://www.youtube.com/channel/UCVdMDLCSxXOqtgrBaRUHKKg">YouTube</a>
+</p></b>
+
+<div align="center">
 
   <h4>
 
-**[Memphis.dev](https://memphis.dev)** is a highly scalable, painless, and effortless data streaming platform.<br>
-Made to enable developers and data teams to collaborate and build<br>
-real-time and streaming apps fast.
+**[Memphis.dev](https://memphis.dev)** is more than a broker. It's a new streaming stack.<br>
+Memphis.dev is a highly scalable event streaming and processing engine.<br>
 
   </h4>
   
 </div>
+
+## ![20](https://user-images.githubusercontent.com/70286779/220196529-abb958d2-5c58-4c33-b5e0-40f5446515ad.png) About
+
+Before Memphis came along, handling ingestion and processing of events on a large scale took months to adopt and was a capability reserved for the top 20% of mega-companies. Now, Memphis opens the door for the other 80% to unleash their event and data streaming superpowers quickly, easily, and with great cost-effectiveness.
+
+**This repository is responsible for the Memphis Functions Python SDK**
 
 ## Installation
 
@@ -61,6 +72,41 @@ def event_handler(msg_payload, msg_headers, inputs):
     payload =  str(msg_payload, 'utf-8')
     as_json = json.loads(payload)
     as_json['modified'] = True
+
+    return bytes(json.dumps(as_json), encoding='utf-8'), msg_headers
+```
+
+Instead of taking `msg_payload` as a bytes object, the as_dict flag can be used to have the JSON parsed to a dictionary.
+
+```python
+import json
+import base64
+from memphis import create_function
+
+def handler(event, context): # The name of this file and this function should match the handler field in the memphis.yaml file in the following format <file name>.<function name>
+    return create_function(event, event_handler = event_handler, as_dict=True)
+
+def event_handler(msg_payload, msg_headers, inputs):
+    msg_payload['modified'] = True
+
+    return msg_payload, msg_headers
+```
+
+Memphis Functions support using Async functions through asyncio. When functions are async, set the use_async parameter to true.
+```python
+import json
+import base64
+import asyncio
+from memphis import create_function
+
+def handler(event, context): # The name of this file and this function should match the handler field in the memphis.yaml file in the following format <file name>.<function name>
+    return create_function(event, event_handler = event_handler, use_async = True)
+
+async def event_handler(msg_payload, msg_headers, inputs):
+    payload =  str(msg_payload, 'utf-8')
+    as_json = json.loads(payload)
+    as_json['modified'] = True
+    asyncio.sleep(1)
 
     return bytes(json.dumps(as_json), encoding='utf-8'), msg_headers
 ```
