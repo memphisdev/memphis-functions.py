@@ -5,7 +5,8 @@ import asyncio
 def create_function(
     event,
     event_handler: callable,
-    use_async: bool = False
+    use_async: bool = False,
+    as_dict: bool = False
 ) -> None:
     """
     This function creates a Memphis function and processes events with the passed-in event_handler function.
@@ -46,6 +47,8 @@ def create_function(
                     The unprocessed message and the exception will be sent to the dead-letter station.
         use_async (bool):
             When using an async function through asyncio, set this flag to True. This will await the event_handler call instead of calling it directly.
+        as_dict (bool):
+            Instead of taking `payload` as a bytes object, the as_dict flag can be used to have the JSON parsed to a dictionary.
 
     Returns:
         handler (callable):
@@ -83,10 +86,17 @@ def create_function(
         for message in event["messages"]:
             try:
                 payload = base64.b64decode(bytes(message['payload'], encoding='utf-8'))
+                if as_dict:
+                    payload =  str(payload, 'utf-8')
+                    payload = json.loads(payload)
+
                 if use_async:
                     processed_message, processed_headers = await event_handler(payload, message['headers'], event["inputs"])
                 else:
                     processed_message, processed_headers = event_handler(payload, message['headers'], event["inputs"])
+
+                if as_dict:
+                    processed_message = bytes(json.dumps(processed_message), encoding='utf-8')
 
                 if isinstance(processed_message, bytes) and isinstance(processed_headers, dict):
                     processed_events["messages"].append({

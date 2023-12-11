@@ -76,6 +76,22 @@ def event_handler(msg_payload, msg_headers, inputs):
     return bytes(json.dumps(as_json), encoding='utf-8'), msg_headers
 ```
 
+Instead of taking `msg_payload` as a bytes object, the as_dict flag can be used to have the JSON parsed to a dictionary.
+
+```python
+import json
+import base64
+from memphis import create_function
+
+def handler(event, context): # The name of this file and this function should match the handler field in the memphis.yaml file in the following format <file name>.<function name>
+    return create_function(event, event_handler = event_handler, as_dict=True)
+
+def event_handler(msg_payload, msg_headers, inputs):
+    msg_payload['modified'] = True
+
+    return msg_payload, msg_headers
+```
+
 Memphis Functions support using Async functions through asyncio. When functions are async, set the use_async parameter to true.
 ```python
 import json
