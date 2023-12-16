@@ -47,6 +47,8 @@ def create_function(
                     The unprocessed message and the exception will be sent to the dead-letter station.
         use_async (bool):
             When using an async function through asyncio, set this flag to True. This will await the event_handler call instead of calling it directly.
+        as_dict (bool):
+            Instead of taking `payload` as a bytes object, the as_dict flag can be used to have the JSON parsed to a dictionary.
 
     Returns:
         handler (callable):

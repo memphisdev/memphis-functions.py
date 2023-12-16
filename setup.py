@@ -8,7 +8,7 @@ long_description = (this_directory / "README.md").read_text()
 setup(
     name="memphis-functions",
     packages=["memphis"],
-    version="1.0.0",
+    version="1.0.1",
     license="Apache-2.0",
     description="A powerful messaging platform for modern developers",
     long_description=long_description,
@@ -17,7 +17,7 @@ setup(
     author="Memphis.dev",
     author_email="team@memphis.dev",
     url="https://github.com/memphisdev/memphis-functions.py",
-    download_url="https://github.com/memphisdev/memphis-functions.py/archive/refs/tags/1.0.0.tar.gz",
+    download_url="https://github.com/memphisdev/memphis-functions.py/archive/refs/tags/1.0.1.tar.gz",
     keywords=["message broker", "devtool", "streaming", "data"],
     install_requires=[""],
     classifiers=[
