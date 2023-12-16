@@ -107,6 +107,10 @@ def create_function(
                 elif processed_message is None and processed_headers is None: # filter out empty messages
                     continue
                 else:
+                    err_msg = f"""Either processed_message or processed_headers were of the wrong type.
+processed_message should be of type bytes and processed_headers should be of type Dict. Ensure these types are correct.
+processed_message is of type {type(processed_message)} and processed_headers if of type {type(processed_headers)}.
+"""
                     raise Exception(Errors.invalid_types)
             except Exception as e:
                 processed_events["failed_messages"].append({
@@ -118,6 +122,6 @@ def create_function(
         try:
             return json.dumps(processed_events, cls=EncodeBase64).encode('utf-8')
         except Exception as e:
-            return f"{Errors.conversion_error} {e}"
+            return f"Returned message types from user function are not able to be converted into JSON: {str(e)}"
 
     return asyncio.run(handler(event))
