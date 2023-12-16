@@ -1,6 +1,7 @@
 import json
 import base64
 import asyncio
+from errors import Errors
 
 def create_function(
     event,
@@ -106,8 +107,7 @@ def create_function(
                 elif processed_message is None and processed_headers is None: # filter out empty messages
                     continue
                 else:
-                    err_msg = "The returned processed_message or processed_headers were not in the right format. processed_message must be bytes and processed_headers, dict"
-                    raise Exception(err_msg)
+                    raise Exception(Errors.invalid_types)
             except Exception as e:
                 processed_events["failed_messages"].append({
                     "headers": message["headers"],
@@ -118,6 +118,6 @@ def create_function(
         try:
             return json.dumps(processed_events, cls=EncodeBase64).encode('utf-8')
         except Exception as e:
-            return f"Returned message types from user function are not able to be converted into JSON: {e}"
+            return f"{Errors.conversion_error} {e}"
 
     return asyncio.run(handler(event))
