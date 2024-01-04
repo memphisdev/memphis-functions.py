@@ -7,7 +7,7 @@ pipeline {
   }
 
   agent {
-    label 'small-ec2-fleet'
+    label 'memphis-jenkins-small-fleet-agent'
   }
 
   stages {
@@ -18,7 +18,7 @@ pipeline {
     }
 
     stage('Define version - BETA') {
-      when {branch 'master'}
+      when {branch 'change-jenkins-agent'}
       steps {
         script {
           versionTag = readFile('./version-beta.conf')
@@ -55,7 +55,7 @@ pipeline {
 			  """
 			  withCredentials([usernamePassword(credentialsId: 'python_sdk', usernameVariable: 'USR', passwordVariable: 'PSW')]) {
           sh """
-            /home/ec2-user/.local/bin/twine upload -u $USR -p $PSW dist/*
+            ~/.local/bin/twine upload -u $USR -p $PSW dist/*
           """
         }
       }
